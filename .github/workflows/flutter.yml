@@ -8,81 +8,25 @@ on:
 
 jobs:
   build-android:
-    name: Build Android APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout source code
         uses: actions/checkout@v3
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
+          flutter-version: '3.22.0'   # zaka iya canzawa zuwa version naka
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build release APK
+      - name: Build APK
         run: flutter build apk --release
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
         with:
           name: naira-fx-apk
           path: build/app/outputs/flutter-apk/app-release.apk
-
-  build-ios:
-    name: Build iOS IPA
-    runs-on: macos-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Build iOS (unsigned)
-        run: flutter build ios --release --no-codesign
-
-      - name: Upload iOS build folder
-        uses: actions/upload-artifact@v4
-        with:
-          name: naira-fx-ios
-          path: build/ios/iphoneos
-
-  release:
-    needs: [build-android, build-ios]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Download Android APK
-        uses: actions/download-artifact@v4
-        with:
-          name: naira-fx-apk
-          path: ./apk
-
-      - name: Download iOS build
-        uses: actions/download-artifact@v4
-        with:
-          name: naira-fx-ios
-          path: ./ios
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ github.run_number }}
-          name: "Release ${{ github.run_number }}"
-          body: |
-            Automated release build ${{ github.run_number }}
-          files: |
-            ./apk/app-release.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
